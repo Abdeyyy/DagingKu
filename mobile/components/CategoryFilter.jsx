@@ -3,6 +3,7 @@ import { Image } from "expo-image";
 import { homeStyles } from "../assets/styles/home.styles";
 
 export default function CategoryFilter({ categories, selectedCategory, onSelectCategory }) {
+  console.log("CategoryFilter:", categories.length);
   return (
     <View style={homeStyles.categoryFilterContainer}>
       <ScrollView

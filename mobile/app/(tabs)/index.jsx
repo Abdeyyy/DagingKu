@@ -31,15 +31,22 @@ const HomeScreen = () => {
         MealAPI.getRandomMeal(),
       ]);
 
-      const transformedCategories = apiCategories.map((cat, index) => ({
-        id: index + 1,
-        name: cat.strCategory,
-        image: cat.strCategoryThumb,
-        description: cat.strCategoryDescription,
-      }));
+      console.log(apiCategories.map((cat) => cat.strCategory));
 
-      setCategories(transformedCategories);
+      const category = ["Beef", "Chicken", "Pork"];
 
+      const transformedCategories = apiCategories
+        .filter((cat) => category.includes(cat.strCategory))
+        .map((cat, index) => ({
+          id: index + 1,
+          name: cat.strCategory,
+          image: cat.strCategoryThumb,
+          description: cat.strCategoryDescription,
+        }));
+
+console.log(transformedCategories);
+
+setCategories(transformedCategories);
       if (!selectedCategory) setSelectedCategory(transformedCategories[0].name);
 
       const transformedMeals = randomMeals
@@ -101,31 +108,6 @@ const HomeScreen = () => {
         }
         contentContainerStyle={homeStyles.scrollContent}
       >
-        {/*  ANIMAL ICONS */}
-        <View style={homeStyles.welcomeSection}>
-          <Image
-            source={require("../../assets/images/lamb.png")}
-            style={{
-              width: 100,
-              height: 100,
-            }}
-          />
-          <Image
-            source={require("../../assets/images/chicken.png")}
-            style={{
-              width: 100,
-              height: 100,
-            }}
-          />
-          <Image
-            source={require("../../assets/images/pork.png")}
-            style={{
-              width: 100,
-              height: 100,
-            }}
-          />
-        </View>
-
         {/* FEATURED SECTION */}
         {featuredRecipe && (
           <View style={homeStyles.featuredSection}>
@@ -173,15 +155,14 @@ const HomeScreen = () => {
             </TouchableOpacity>
           </View>
         )}
-
+        
         {categories.length > 0 && (
           <CategoryFilter
             categories={categories}
             selectedCategory={selectedCategory}
             onSelectCategory={handleCategorySelect}
           />
-        )}
-
+)}
         <View style={homeStyles.recipesSection}>
           <View style={homeStyles.sectionHeader}>
             <Text style={homeStyles.sectionTitle}>{selectedCategory}</Text>
