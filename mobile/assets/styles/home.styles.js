@@ -8,6 +8,7 @@ export const homeStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingTop: 20
   },
   scrollContent: {
     paddingBottom: 32,
@@ -134,11 +135,13 @@ export const homeStyles = StyleSheet.create({
     textAlign: "center",
   },
   categoryFilterContainer: {
-    marginVertical: 16,
+    marginVertical: 0,
   },
   categoryFilterScrollContent: {
+    flexGrow: 1,
+    justifyContent: "space-evenly",
+    flexDirection: "row",
     paddingHorizontal: 16,
-    gap: 12,
   },
   categoryButton: {
     flexDirection: "column",

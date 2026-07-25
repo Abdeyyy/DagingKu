@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl, SafeAreaView } from "react-native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { MealAPI } from "../../services/mealAPI";
@@ -9,8 +9,6 @@ import { Ionicons } from "@expo/vector-icons";
 import CategoryFilter from "../../components/CategoryFilter";
 import RecipeCard from "../../components/RecipeCard";
 import LoadingSpinner from "../../components/LoadingSpinner";
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const HomeScreen = () => {
   const router = useRouter();
@@ -25,9 +23,8 @@ const HomeScreen = () => {
     try {
       setLoading(true);
 
-      const [apiCategories, randomMeals, featuredMeal] = await Promise.all([
+      const [apiCategories, featuredMeal] = await Promise.all([
         MealAPI.getCategories(),
-        MealAPI.getRandomMeals(12),
         MealAPI.getRandomMeal(),
       ]);
 
@@ -40,18 +37,15 @@ const HomeScreen = () => {
 
       setCategories(transformedCategories);
 
+
       if (!selectedCategory) setSelectedCategory(transformedCategories[0].name);
 
-      const transformedMeals = randomMeals
-        .map((meal) => MealAPI.transformMealData(meal))
-        .filter((meal) => meal !== null);
-
-      setRecipes(transformedMeals);
+      loadCategoryData(transformedCategories[0].name);
 
       const transformedFeatured = MealAPI.transformMealData(featuredMeal);
       setFeaturedRecipe(transformedFeatured);
     } catch (error) {
-      console.log("Error loading the data", error);
+      console.error("Error loading the data", error);
     } finally {
       setLoading(false);
     }
@@ -77,7 +71,6 @@ const HomeScreen = () => {
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // await sleep(2000);
     await loadData();
     setRefreshing(false);
   };
@@ -101,30 +94,6 @@ const HomeScreen = () => {
         }
         contentContainerStyle={homeStyles.scrollContent}
       >
-        {/*  ANIMAL ICONS */}
-        <View style={homeStyles.welcomeSection}>
-          <Image
-            source={require("../../assets/images/lamb.png")}
-            style={{
-              width: 100,
-              height: 100,
-            }}
-          />
-          <Image
-            source={require("../../assets/images/chicken.png")}
-            style={{
-              width: 100,
-              height: 100,
-            }}
-          />
-          <Image
-            source={require("../../assets/images/pork.png")}
-            style={{
-              width: 100,
-              height: 100,
-            }}
-          />
-        </View>
 
         {/* FEATURED SECTION */}
         {featuredRecipe && (
@@ -173,15 +142,14 @@ const HomeScreen = () => {
             </TouchableOpacity>
           </View>
         )}
-
+        
         {categories.length > 0 && (
           <CategoryFilter
             categories={categories}
             selectedCategory={selectedCategory}
             onSelectCategory={handleCategorySelect}
           />
-        )}
-
+)}
         <View style={homeStyles.recipesSection}>
           <View style={homeStyles.sectionHeader}>
             <Text style={homeStyles.sectionTitle}>{selectedCategory}</Text>
