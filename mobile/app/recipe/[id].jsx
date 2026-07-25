@@ -1,7 +1,7 @@
 import { View, Text, Alert, ScrollView, TouchableOpacity } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { useUser } from "@clerk/clerk-expo";
+// import { useUser } from "@clerk/clerk-expo";
 import { API_URL } from "../../constants/api";
 import { MealAPI } from "../../services/mealAPI";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -23,8 +23,8 @@ const RecipeDetailScreen = () => {
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const { user } = useUser();
-  const userId = user?.id;
+  // const { user } = useUser();
+  // const userId = user?.id;
 
   useEffect(() => {
     const checkIfSaved = async () => {
@@ -59,7 +59,7 @@ const RecipeDetailScreen = () => {
       }
     };
 
-    checkIfSaved();
+    // checkIfSaved();
     loadRecipeDetail();
   }, [recipeId, userId]);
 
@@ -137,7 +137,7 @@ const RecipeDetailScreen = () => {
               <Ionicons name="arrow-back" size={24} color={COLORS.white} />
             </TouchableOpacity>
 
-            <TouchableOpacity
+            {/*<TouchableOpacity
               style={[
                 recipeDetailStyles.floatingButton,
                 { backgroundColor: isSaving ? COLORS.gray : COLORS.primary },
@@ -150,7 +150,7 @@ const RecipeDetailScreen = () => {
                 size={24}
                 color={COLORS.white}
               />
-            </TouchableOpacity>
+            </TouchableOpacity>*/}
           </View>
 
           {/* Title Section */}
