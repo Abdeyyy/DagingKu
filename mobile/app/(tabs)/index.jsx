@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl } from "react-native";
+import { View, Text, ScrollView, TouchableOpacity, FlatList, RefreshControl, SafeAreaView } from "react-native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
 import { MealAPI } from "../../services/mealAPI";
@@ -9,8 +9,6 @@ import { Ionicons } from "@expo/vector-icons";
 import CategoryFilter from "../../components/CategoryFilter";
 import RecipeCard from "../../components/RecipeCard";
 import LoadingSpinner from "../../components/LoadingSpinner";
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const HomeScreen = () => {
   const router = useRouter();
@@ -25,9 +23,8 @@ const HomeScreen = () => {
     try {
       setLoading(true);
 
-      const [apiCategories, randomMeals, featuredMeal] = await Promise.all([
+      const [apiCategories, featuredMeal] = await Promise.all([
         MealAPI.getCategories(),
-        MealAPI.getRandomMeals(12),
         MealAPI.getRandomMeal(),
       ]);
 
@@ -35,30 +32,14 @@ const HomeScreen = () => {
 
       const category = ["Beef", "Chicken", "Pork"];
 
-      const transformedCategories = apiCategories
-        .filter((cat) => category.includes(cat.strCategory))
-        .map((cat, index) => ({
-          id: index + 1,
-          name: cat.strCategory,
-          image: cat.strCategoryThumb,
-          description: cat.strCategoryDescription,
-        }));
-
-console.log(transformedCategories);
-
-setCategories(transformedCategories);
       if (!selectedCategory) setSelectedCategory(transformedCategories[0].name);
 
-      const transformedMeals = randomMeals
-        .map((meal) => MealAPI.transformMealData(meal))
-        .filter((meal) => meal !== null);
-
-      setRecipes(transformedMeals);
+      loadCategoryData(transformedCategories[0].name);
 
       const transformedFeatured = MealAPI.transformMealData(featuredMeal);
       setFeaturedRecipe(transformedFeatured);
     } catch (error) {
-      console.log("Error loading the data", error);
+      console.error("Error loading the data", error);
     } finally {
       setLoading(false);
     }
@@ -84,7 +65,6 @@ setCategories(transformedCategories);
 
   const onRefresh = async () => {
     setRefreshing(true);
-    // await sleep(2000);
     await loadData();
     setRefreshing(false);
   };
@@ -108,6 +88,7 @@ setCategories(transformedCategories);
         }
         contentContainerStyle={homeStyles.scrollContent}
       >
+
         {/* FEATURED SECTION */}
         {featuredRecipe && (
           <View style={homeStyles.featuredSection}>

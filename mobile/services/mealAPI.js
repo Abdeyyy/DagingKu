@@ -55,8 +55,10 @@ export const MealAPI = {
   getCategories: async () => {
     try {
       const response = await fetch(`${BASE_URL}/categories.php`);
-      const data = await response.json();
-      return data.categories || [];
+      const data = (await response.json());
+      return data.categories.filter((e) => {
+         return e.strCategory === "Chicken" || e.strCategory === "Beef" || e.strCategory === "Pork"
+      }) || [];
     } catch (error) {
       console.error("Error getting categories:", error);
       return [];

@@ -1,14 +1,14 @@
-import { useAuth } from "@clerk/clerk-expo";
+// import { useAuth } from "@clerk/clerk-expo";
 import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
 
 const TabsLayout = () => {
-  const { isSignedIn, isLoaded } = useAuth();
+  // const { isSignedIn, isLoaded } = useAuth();
 
-  if (!isLoaded) return null;
+  // if (!isLoaded) return null;
 
-  if (!isSignedIn) return <Redirect href={"/(auth)/sign-in"} />;
+  // if (!isSignedIn) return <Redirect href={"/(auth)/sign-in"} />;
 
   return (
     <Tabs
@@ -33,22 +33,30 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Recipes",
+          title: "Resep",
           tabBarIcon: ({ color, size }) => <Ionicons name="restaurant" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="search"
+        name="scan"
         options={{
-          title: "Search",
-          tabBarIcon: ({ color, size }) => <Ionicons name="search" size={size} color={color} />,
+          title: "Scan",
+          tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="favorites"
+        name="histori"
         options={{
-          title: "Favorites",
-          tabBarIcon: ({ color, size }) => <Ionicons name="heart" size={size} color={color} />,
+          title: "Histori",
+          tabBarIcon: ({ color, size }) => <Ionicons name="refresh-outline" size={size} color={color} />,
+        }}
+      />
+      
+      <Tabs.Screen
+        name="account"
+        options={{
+          title: "Akun",
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-circle-outline" size={size} color={color} />,
         }}
       />
     </Tabs>
