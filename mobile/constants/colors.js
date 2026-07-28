@@ -43,12 +43,12 @@ const oceanTheme = {
 };
 
 const sunsetTheme = {
-  primary: "#FF7E67",
+  primary: "#fc4524",
   background: "#FFF3F0",
   text: "#2C1810",
   border: "#FFD5CC",
   white: "#FFFFFF",
-  textLight: "#FFA494",
+  textLight: "#000000",
   card: "#FFFFFF",
   shadow: "#000000",
 };
@@ -98,4 +98,4 @@ export const THEMES = {
 };
 
 // 👇 change this to switch theme
-export const COLORS = THEMES.purple;
+export const COLORS = THEMES.sunset;
