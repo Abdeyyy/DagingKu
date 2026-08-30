@@ -1,4 +1,4 @@
-import { useSignIn } from "@clerk/clerk-expo";
+// import { useSignIn } from "@clerk/clerk-expo";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -21,7 +21,7 @@ import { COLORS } from "../../constants/colors";
 const SignInScreen = () => {
   const router = useRouter();
 
-  const { signIn, setActive, isLoaded } = useSignIn();
+  // const { signIn, setActive, isLoaded } = useSignIn();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

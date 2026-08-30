@@ -6,7 +6,7 @@ import { homeStyles } from "../../assets/styles/home.styles";
 import { Image } from "expo-image";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
-import CategoryFilter from "../../components/CategoryFilter";
+import CategoryFilter from "../../components/category/CategoryFilter";
 import RecipeCard from "../../components/RecipeCard";
 import LoadingSpinner from "../../components/LoadingSpinner";
 
@@ -28,9 +28,14 @@ const HomeScreen = () => {
         MealAPI.getRandomMeal(),
       ]);
 
-      console.log(apiCategories.map((cat) => cat.strCategory));
+      const transformedCategories = apiCategories.map((cat, index) => ({
+        id: index + 1,
+        name: cat.strCategory,
+        image: cat.strCategoryThumb,
+        description: cat.strCategoryDescription,
+      }));
 
-      const category = ["Beef", "Chicken", "Pork"];
+      setCategories(transformedCategories);
 
       if (!selectedCategory) setSelectedCategory(transformedCategories[0].name);
 
@@ -51,7 +56,7 @@ const HomeScreen = () => {
       const transformedMeals = meals
         .map((meal) => MealAPI.transformMealData(meal))
         .filter((meal) => meal !== null);
-      setRecipes(transformedMeals);
+      setRecipes(transformedMeals.slice(0, 4));
     } catch (error) {
       console.error("Error loading category data:", error);
       setRecipes([]);
@@ -143,7 +148,7 @@ const HomeScreen = () => {
             selectedCategory={selectedCategory}
             onSelectCategory={handleCategorySelect}
           />
-)}
+        )}
         <View style={homeStyles.recipesSection}>
           <View style={homeStyles.sectionHeader}>
             <Text style={homeStyles.sectionTitle}>{selectedCategory}</Text>

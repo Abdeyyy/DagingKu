@@ -1,147 +1,73 @@
 import { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, FlatList } from "react-native";
-import { MealAPI } from "../../services/mealAPI";
-import { useDebounce } from "../../hooks/useDebounce";
-import { searchStyles } from "../../assets/styles/search.styles";
+import { View, Text, TextInput, TouchableOpacity, FlatList, Alert, Button, Image } from "react-native";
+import { LinearGradient } from 'expo-linear-gradient';
+import { scanStyles } from "../../assets/styles/scan.styles";
 import { COLORS } from "../../constants/colors";
 import { Ionicons } from "@expo/vector-icons";
 import RecipeCard from "../../components/RecipeCard";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import CategoryOption from "../../components/scan/CategoryOption";
+import ScanOption from "../../components/scan/ScanOption";
+import { useRouter } from "expo-router";
+import * as ImagePicker from 'expo-image-picker';
 
-const SearchScreen = () => {
+const ScanScreen = () => {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const [image, setImage] = useState(null);
 
-  const performSearch = async (query) => {
-    // if no search query
-    if (!query.trim()) {
-      const randomMeals = await MealAPI.getRandomMeals(12);
-      return randomMeals
-        .map((meal) => MealAPI.transformMealData(meal))
-        .filter((meal) => meal !== null);
+   const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      return;
     }
 
-    // search by name first, then by ingredient if no results
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
 
-    const nameResults = await MealAPI.searchMealsByName(query);
-    let results = nameResults;
-
-    if (results.length === 0) {
-      const ingredientResults = await MealAPI.filterByIngredient(query);
-      results = ingredientResults;
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
     }
-
-    return results
-      .slice(0, 12)
-      .map((meal) => MealAPI.transformMealData(meal))
-      .filter((meal) => meal !== null);
   };
 
-  useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const results = await performSearch("");
-        setRecipes(results);
-      } catch (error) {
-        console.error("Error loading initial data:", error);
-      } finally {
-        setInitialLoading(false);
-      }
-    };
-
-    loadInitialData();
-  }, []);
-
-  useEffect(() => {
-    if (initialLoading) return;
-
-    const handleSearch = async () => {
-      setLoading(true);
-
-      try {
-        const results = await performSearch(debouncedSearchQuery);
-        setRecipes(results);
-      } catch (error) {
-        console.error("Error searching:", error);
-        setRecipes([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    handleSearch();
-  }, [debouncedSearchQuery, initialLoading]);
-
-  if (initialLoading) return <LoadingSpinner message="Loading recipes..." />;
 
   return (
-    <View style={searchStyles.container}>
-      <View style={searchStyles.searchSection}>
-        <View style={searchStyles.searchContainer}>
-          <Ionicons
-            name="search"
-            size={20}
-            color={COLORS.textLight}
-            style={searchStyles.searchIcon}
-          />
-          <TextInput
-            style={searchStyles.searchInput}
-            placeholder="Search recipes, ingredients..."
-            placeholderTextColor={COLORS.textLight}
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            returnKeyType="search"
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")} style={searchStyles.clearButton}>
-              <Ionicons name="close-circle" size={20} color={COLORS.textLight} />
-            </TouchableOpacity>
-          )}
+    <View style={scanStyles.container}>
+      <View style={scanStyles.scanSection}>
+        <View style={scanStyles.scanContainer}>
+          <LinearGradient
+             colors={COLORS.gradient}
+             style={[scanStyles.linearGradient, {flexDirection: "column"}]}
+             start={{ x: 1, y: 0 }}
+             end={{ x: 0, y: 1 }}
+          >
+            <View style={scanStyles.cornerTopLeft} />
+            <View style={scanStyles.cornerTopRight} />
+            <View style={scanStyles.cornerBottomLeft} />
+            <View style={scanStyles.cornerBottomRight} />
+            <View style={scanStyles.scanTitle}>
+               <Text style={scanStyles.title1}>DAGING</Text><Text style={scanStyles.title2}>KU</Text> 
+            </View>
+
+            <Text style={scanStyles.paragraph}>Periksa kesegaran dan kualitas daging hanya dalam hitungan detik.</Text>
+            
+          </LinearGradient>
         </View>
       </View>
 
-      <View style={searchStyles.resultsSection}>
-        <View style={searchStyles.resultsHeader}>
-          <Text style={searchStyles.resultsTitle}>
-            {searchQuery ? `Results for "${searchQuery}"` : "Popular Recipes"}
-          </Text>
-          <Text style={searchStyles.resultsCount}>{recipes.length} found</Text>
-        </View>
+      <CategoryOption />
+      <ScanOption />
 
-        {loading ? (
-          <View style={searchStyles.loadingContainer}>
-            <LoadingSpinner message="Searching recipes..." size="small" />
-          </View>
-        ) : (
-          <FlatList
-            data={recipes}
-            renderItem={({ item }) => <RecipeCard recipe={item} />}
-            keyExtractor={(item) => item.id.toString()}
-            numColumns={2}
-            columnWrapperStyle={searchStyles.row}
-            contentContainerStyle={searchStyles.recipesGrid}
-            showsVerticalScrollIndicator={false}
-            ListEmptyComponent={<NoResultsFound />}
-          />
-        )}
-      </View>
     </View>
   );
 };
-export default SearchScreen;
-
-function NoResultsFound() {
-  return (
-    <View style={searchStyles.emptyState}>
-      <Ionicons name="search-outline" size={64} color={COLORS.textLight} />
-      <Text style={searchStyles.emptyTitle}>No recipes found</Text>
-      <Text style={searchStyles.emptyDescription}>
-        Try adjusting your search or try different keywords
-      </Text>
-    </View>
-  );
-}
+export default ScanScreen;

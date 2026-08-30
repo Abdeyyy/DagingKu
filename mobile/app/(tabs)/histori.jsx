@@ -15,39 +15,6 @@ const HistoriScreen = () => {
   const [favoriteRecipes, setFavoriteRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // useEffect(() => {
-  //   const loadFavorites = async () => {
-  //     try {
-  //       const response = await fetch(`${API_URL}/favorites/${user.id}`);
-  //       if (!response.ok) throw new Error("Failed to fetch favorites");
-
-  //       const favorites = await response.json();
-
-  //       // transform the data to match the RecipeCard component's expected format
-  //       const transformedFavorites = favorites.map((favorite) => ({
-  //         ...favorite,
-  //         id: favorite.recipeId,
-  //       }));
-
-  //       setFavoriteRecipes(transformedFavorites);
-  //     } catch (error) {
-  //       console.log("Error loading favorites", error);
-  //       Alert.alert("Error", "Failed to load favorites");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   loadFavorites();
-  // }, [user.id]);
-
-  // const handleSignOut = () => {
-  //   Alert.alert("Logout", "Are you sure you want to logout?", [
-  //     { text: "Cancel", style: "cancel" },
-  //     { text: "Logout", style: "destructive", onPress: signOut },
-  //   ]);
-  // };
-
   if (loading) return <LoadingSpinner message="Loading your favorites..." />;
 
   return (
