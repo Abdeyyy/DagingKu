@@ -28,9 +28,14 @@ const HomeScreen = () => {
         MealAPI.getRandomMeal(),
       ]);
 
-      console.log(apiCategories.map((cat) => cat.strCategory));
+      const transformedCategories = apiCategories.map((cat, index) => ({
+        id: index + 1,
+        name: cat.strCategory,
+        image: cat.strCategoryThumb,
+        description: cat.strCategoryDescription,
+      }));
 
-      const category = ["Beef", "Chicken", "Pork"];
+      setCategories(transformedCategories);
 
       if (!selectedCategory) setSelectedCategory(transformedCategories[0].name);
 

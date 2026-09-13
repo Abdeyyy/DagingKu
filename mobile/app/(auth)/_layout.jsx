@@ -1,13 +1,8 @@
-// import { Redirect, Stack } from "expo-router";
-// import { useAuth } from "@clerk/clerk-expo";
+import { Stack } from "expo-router";
 
-// export default function AuthRoutesLayout() {
-//   const { isSignedIn } = useAuth();
-
-//   if (isSignedIn) return <Redirect href={"/"} />;
-
-//   return <Stack screenOptions={{ headerShown: false }} />;
-// }
-
-
-// Digunakan buat nanti kalo middleware sudah jadi
+// Layout untuk halaman autentikasi (Login & Daftar)
+// TODO: Tambahkan middleware auth di sini ketika backend sudah siap
+// Contoh: if (isSignedIn) return <Redirect href="/" />;
+export default function AuthRoutesLayout() {
+  return <Stack screenOptions={{ headerShown: false }} />;
+}
