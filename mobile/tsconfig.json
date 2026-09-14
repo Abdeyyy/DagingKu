@@ -4,7 +4,15 @@
     "strict": true,
     "paths": {
       "@/*": ["./*"]
-    }
+    },
+    "typeRoots": ["./@types", "./node_modules/@types"]
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts", "app/_layout.jsx"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "app/_layout.jsx",
+    "@types/**/*.d.ts"
+  ]
 }
