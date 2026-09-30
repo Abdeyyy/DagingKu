@@ -16,6 +16,7 @@ import usePreprocessImage  from "../../hooks/usePreprocessingImage"; // sesuaika
 import LinearProgressIndicator from "../../components/LinearProgressIndicator";
 import * as FileSystem from 'expo-file-system';
 import { getInferenceSession } from "../../utils/onnxSession";
+import { useLocalSearchParams } from "expo-router";
 
 // Urutan label HARUS sama persis dengan urutan folder dataset saat training
 const CLASS_LABELS = ["Segar", "Kurang Segar", "Busuk"];
@@ -29,57 +30,52 @@ function softmax(logits) {
 
 const ScanAnimateScreen = () => {
   const router = useRouter();
-  const image = useSelector((state) => state.image.image);
+  const { imageUri } = useLocalSearchParams();
   const [imageBackgroundHeight, setImageBackgroundHeight] = useState(0);
   const [progress, setProgress] = useState(0);
   const [checkBullets1, setCheckBullets1] = useState(false);
   const [checkBullets2, setCheckBullets2] = useState(false);
   const [checkBullets3, setCheckBullets3] = useState(false);
+  const [scanResult, setScanResult] = useState(null);
 
-  const scanLineValue = useSharedValue(imageBackgroundHeight);
-
-  const animatedStyles = useAnimatedStyle(() => ({
-    transform: [{ translateY: scanLineValue.value }],
+  const translateY = useSharedValue(0);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: translateY.value }],
   }));
 
   useEffect(() => {
-    if (imageBackgroundHeight === 0) return;
-
     let isMounted = true;
 
-    // Animasi ScanLine (visual saja, tidak terkait proses inferensi)
-    scanLineValue.value = withRepeat(
-      withTiming(imageBackgroundHeight, { duration: 1000 }),
+    // Animasi loading
+    translateY.value = withRepeat(
+      withTiming(-20, { duration: 1000 }),
       -1,
       true
     );
 
-    // Progress bar palsu untuk checklist 1 & 2 (sekadar UI, berjalan sambil menunggu proses asli)
-    // Dibatasi maksimal 0.75 supaya tidak mendahului hasil asli yang belum tentu selesai
     let fakeProgress = 0;
     const progressInterval = setInterval(() => {
       fakeProgress = Math.min(fakeProgress + 0.05, 0.75);
       if (isMounted) {
         setProgress(fakeProgress);
-        if (fakeProgress >= 0.25) setCheckBullets1(true);
-        if (fakeProgress >= 0.5) setCheckBullets2(true);
+        if (fakeProgress >= 0.3) setCheckBullets1(true);
+        if (fakeProgress >= 0.6) setCheckBullets2(true);
       }
-    }, 100);
+    }, 150);
 
-    // Proses inferensi ONNX yang sesungguhnya
+    // Proses inferensi ONNX
     async function runInference() {
       try {
-        const inputTensor = await usePreprocessImage(image.uri);
-
+        if (!imageUri) throw new Error("No image found");
+        
+        const inputTensor = await usePreprocessImage(imageUri);
         const session = await getInferenceSession();
-
         
         const feeds = { input: inputTensor };
         const results = await session.run(feeds);
         const rawOutput = Array.from(results.output.data);
 
         const probabilities = softmax(rawOutput);
-        console.log(probabilities);
 
         let maxIndex = 0;
         for (let i = 1; i < probabilities.length; i++) {
@@ -87,28 +83,34 @@ const ScanAnimateScreen = () => {
         }
 
         const predictedLabel = CLASS_LABELS[maxIndex];
-        const predictedConfidence = (probabilities[maxIndex] * 100).toFixed(1);
+        const predictedConfidence = Math.round(probabilities[maxIndex] * 100);
 
         if (!isMounted) return;
 
         clearInterval(progressInterval);
         setProgress(1);
         setCheckBullets3(true);
+        setScanResult({ label: predictedLabel, confidence: predictedConfidence });
 
-        // Jeda singkat biar user sempat lihat checklist ke-3 tercentang sebelum pindah halaman
         setTimeout(() => {
+          if (!isMounted) return;
           router.replace({
-            pathname: "/scan-result",
-            params: { label: predictedLabel, confidence: predictedConfidence },
+            pathname: "/(auth)/scan-result",
+            params: {
+              label: predictedLabel,
+              confidence: predictedConfidence,
+              imageUri: imageUri || null
+            }
           });
-        }, 400);
+        }, 1500);
+
       } catch (error) {
         console.error("Gagal menjalankan inferensi ONNX:", error);
         if (!isMounted) return;
         clearInterval(progressInterval);
         router.replace({
-          pathname: "/scan-result",
-          params: { error: "true" },
+          pathname: "/(auth)/scan-result",
+          params: { error: "true", imageUri: imageUri || null },
         });
       }
     }
@@ -119,7 +121,7 @@ const ScanAnimateScreen = () => {
       isMounted = false;
       clearInterval(progressInterval);
     };
-  }, [imageBackgroundHeight]);
+  }, [imageUri]);
 
   return (
     <View style={scanStyles.container}>
@@ -127,47 +129,68 @@ const ScanAnimateScreen = () => {
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="arrow-back-outline" style={[scanStyles.leftIcon, { fontSize: 35, fontWeight: 800 }]} />
         </TouchableOpacity>
-        <Text style={[scanStyles.title2, { fontSize: 20, color: "white" }]}>Hasil Pindai</Text>
+        <Text style={[scanStyles.title2, { fontSize: 20, color: "white" }]}>Scan Animate</Text>
       </View>
+
       <View style={scanStyles.scanSection}>
         <ImageBackground
-          style={[scanStyles.scanContainer]}
-          source={{ uri: image.uri }}
+          style={[scanStyles.scanContainer, { height: 200 }]}
+          source={{ uri: imageUri || null }}
           onLayout={(event) => {
             const { height } = event.nativeEvent.layout;
-            setImageBackgroundHeight(height - 42);
+            setImageBackgroundHeight(height);
           }}
         >
-          <View style={[scanStyles.linearGradient, { flexDirection: "column", height: 400 }]}>
-            <Animated.View style={[scanStyles.scanLine, animatedStyles]} />
-            <View style={scanStyles.cornerTopLeft} />
-            <View style={scanStyles.cornerTopRight} />
-            <View style={scanStyles.cornerBottomLeft} />
-            <View style={scanStyles.cornerBottomRight} />
-          </View>
+          {!scanResult && (
+            <Animated.View style={[scanStyles.scanLine, animatedStyle]} />
+          )}
+          
+          {scanResult && (
+            <View style={scanResult.label === "Segar" ? scanStyles.capSegar : 
+                         scanResult.label === "Kurang Segar" ? scanStyles.capKurangSegar : 
+                         scanStyles.capTidakSegar}>
+              <Text style={scanResult.label === "Segar" ? scanStyles.textCapSegar : 
+                          scanResult.label === "Kurang Segar" ? scanStyles.textCapKurangSegar : 
+                          scanStyles.textCapTidakSegar}>
+                {scanResult.label.toUpperCase()}
+              </Text>
+            </View>
+          )}
         </ImageBackground>
 
-        <View style={scanStyles.resultsHeader}>
-          <Text style={scanStyles.resultsCount}>Menganalisis gambar :</Text>
+        <View style={scanStyles.percentage}>
+          {!scanResult ? (
+            <>
+              <Text style={scanStyles.percentageText}>{Math.round(progress * 100)}%</Text>
+              <Text style={scanStyles.resultsCount}>Sedang menganalisis gambar...</Text>
+            </>
+          ) : (
+            <>
+              <Text style={scanStyles.percentageText}>{scanResult.confidence}%</Text>
+              <Text style={scanStyles.resultsCount}>Analisis selesai!</Text>
+            </>
+          )}
         </View>
-        <LinearProgressIndicator progress={progress} />
+      </View>
 
-        <View style={scanStyles.listProgress}>
-          <View style={scanStyles.listItemProgress}>
-            <Text style={checkBullets1 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
-            <Text style={checkBullets1 ? scanStyles.textOn : scanStyles.textOff}>Mendeteksi jenis dan area daging</Text>
-          </View>
-          <View style={scanStyles.listItemProgress}>
-            <Text style={checkBullets2 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
-            <Text style={checkBullets2 ? scanStyles.textOn : scanStyles.textOff}>Menganalisa warna dan textur</Text>
-          </View>
-          <View style={scanStyles.listItemProgress}>
-            <Text style={checkBullets3 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
-            <Text style={checkBullets3 ? scanStyles.textOn : scanStyles.textOff}>Menghitung skor kualitas</Text>
-          </View>
+      <LinearProgressIndicator progress={progress} />
+
+      <View style={scanStyles.checklist}>
+        <View style={scanStyles.listItemProgress}>
+          <Text style={checkBullets1 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
+          <Text style={checkBullets1 ? scanStyles.textOn : scanStyles.textOff}>Mendeteksi jenis dan area daging</Text>
+        </View>
+        <View style={scanStyles.listItemProgress}>
+          <Text style={checkBullets2 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
+          <Text style={checkBullets2 ? scanStyles.textOn : scanStyles.textOff}>Menganalisa warna dan textur</Text>
+        </View>
+        <View style={scanStyles.listItemProgress}>
+          <Text style={checkBullets3 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
+          <Text style={checkBullets3 ? scanStyles.textOn : scanStyles.textOff}>Menghitung skor kualitas</Text>
         </View>
       </View>
     </View>
   );
 };
+
 export default ScanAnimateScreen;

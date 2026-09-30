@@ -1,33 +1,20 @@
-// import { useAuth } from "@clerk/clerk-expo";
+
 import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
+import Dock from "../../components/Dock"; // Import custom Dock buatan kita
 
 const TabsLayout = () => {
   // const { isSignedIn, isLoaded } = useAuth();
-
   // if (!isLoaded) return null;
-
   // if (!isSignedIn) return <Redirect href={"/(auth)/sign-in"} />;
 
   return (
     <Tabs
+      // Gunakan komponen Dock kustom alih-alih navbar Expo bawaan
+      tabBar={(props) => <Dock {...props} panelHeight={68} />}
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textLight,
-        tabBarStyle: {
-          backgroundColor: COLORS.white,
-          borderTopColor: COLORS.border,
-          borderTopWidth: 1,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: 80,
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600",
-        },
       }}
     >
       <Tabs.Screen
@@ -40,7 +27,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="scan"
         options={{
-          title: "Scan",
+          title: "Model",
           tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} />,
         }}
       />
@@ -48,10 +35,9 @@ const TabsLayout = () => {
         name="histori"
         options={{
           title: "Histori",
-          tabBarIcon: ({ color, size }) => <Ionicons name="refresh-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="time-outline" size={size} color={color} />,
         }}
       />
-      
       <Tabs.Screen
         name="account"
         options={{

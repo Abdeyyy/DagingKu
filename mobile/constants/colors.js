@@ -153,5 +153,11 @@ export const THEMES = {
   roseGold: roseGoldTheme,
 };
 
-// Ganti tema aktif di sini
-export const COLORS = THEMES.sunset;
+// 👇 change this to switch theme
+const currentTheme = THEMES.sunset;
+export const COLORS = {
+  ...currentTheme,
+  gradient: currentTheme.gradient || [currentTheme.primary, currentTheme.textLight || "#000"],
+  title1: currentTheme.title1 || currentTheme.primary,
+  title2: currentTheme.title2 || currentTheme.textLight || "#000",
+};

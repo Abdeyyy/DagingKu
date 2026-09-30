@@ -1,22 +1,22 @@
-// // import { useSignUp } from "@clerk/clerk-expo";
-// import { useState } from "react";
-// import {
-//   View,
-//   Text,
-//   Alert,
-//   KeyboardAvoidingView,
-//   Platform,
-//   ScrollView,
-//   TextInput,
-//   TouchableOpacity,
-// } from "react-native";
-// import { authStyles } from "../../assets/styles/auth.styles";
-// import { Image } from "expo-image";
-// import { COLORS } from "../../constants/colors";
-// const VerifyEmail = ({ email, onBack }) => {
-//   const { isLoaded, signUp, setActive } = useSignUp();
-//   const [code, setCode] = useState("");
-//   const [loading, setLoading] = useState(false);
+
+import { useState } from "react";
+import {
+  View,
+  Text,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
+import { authStyles } from "../../assets/styles/auth.styles";
+import { Image } from "expo-image";
+import { COLORS } from "../../constants/colors";
+const VerifyEmail = ({ email, onBack }) => {
+  const { isLoaded, signUp, setActive } = useSignUp();
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
 
 //   const handleVerification = async () => {
 //     if (!isLoaded) return;

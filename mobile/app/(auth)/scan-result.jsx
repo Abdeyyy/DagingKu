@@ -2,12 +2,10 @@ import { View, Text, TouchableOpacity, ImageBackground } from "react-native";
 import { scanStyles } from "../../assets/styles/scan.styles";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useSelector } from "react-redux";
 
 const ScanResultScreen = () => {
   const router = useRouter();
-  const image = useSelector((state) => state.image.image);
-  const { label, confidence, error } = useLocalSearchParams();
+  const { label, confidence, error, imageUri } = useLocalSearchParams();
 
   return (
     <View style={scanStyles.container}>
@@ -21,7 +19,7 @@ const ScanResultScreen = () => {
       <View style={scanStyles.scanSection}>
         <ImageBackground
           style={[scanStyles.scanContainer, { height: 200, justifyContent: "center", overflow: "visible", zIndex: 99999 }]}
-          source={{ uri: image?.uri }}
+          source={{ uri: imageUri || null }}
         >
           <View style={(label == "Segar")? scanStyles.capSegar : (label == "Kurang Segar")? scanStyles.capKurangSegar: scanStyles.capTidakSegar}>
             <Text style={(label == "Segar")? scanStyles.textCapSegar : (label == "Kurang Segar")? scanStyles.textCapKurangSegar: scanStyles.textCapTidakSegar}>{error ? "ERROR" : label?.toUpperCase()}</Text>
