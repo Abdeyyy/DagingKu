@@ -12,6 +12,18 @@ import Animated, {
 import LinearProgressIndicator from "../../components/LinearProgressIndicator";
 import { useLocalSearchParams } from "expo-router";
 
+import usePreprocessImage from "../../hooks/usePreprocessingImage";
+import { getInferenceSession } from "../../utils/onnxSession";
+
+const CLASS_LABELS = ["Segar", "Kurang Segar", "Busuk"];
+
+function softmax(logits) {
+  const maxLogit = Math.max(...logits);
+  const exps = logits.map((val) => Math.exp(val - maxLogit));
+  const sumExps = exps.reduce((a, b) => a + b, 0);
+  return exps.map((val) => val / sumExps);
+}
+
 const ScanAnimateScreen = () => {
   const router = useRouter();
   const { imageUri } = useLocalSearchParams();
@@ -29,6 +41,8 @@ const ScanAnimateScreen = () => {
   }));
 
   useEffect(() => {
+    let isMounted = true;
+
     // Animasi loading
     translateY.value = withRepeat(
       withTiming(-20, { duration: 1000 }),
@@ -36,46 +50,75 @@ const ScanAnimateScreen = () => {
       true
     );
 
-    // Simulasi proses scan
-    const interval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 1) {
-          clearInterval(interval);
-          
-          // Set hasil scan dummy
-          setTimeout(() => {
-            const results = ["Segar", "Kurang Segar", "Busuk"];
-            const randomResult = results[Math.floor(Math.random() * results.length)];
-            const randomConfidence = Math.floor(Math.random() * 30) + 70; // 70-100%
-            
-            setScanResult({ label: randomResult, confidence: randomConfidence });
-            
-            // Navigate ke hasil setelah 2 detik
-            setTimeout(() => {
-              router.push({
-                pathname: "/(auth)/scan-result",
-                params: {
-                  label: randomResult,
-                  confidence: randomConfidence,
-                  imageUri: imageUri || null
-                }
-              });
-            }, 2000);
-          }, 1000);
-          
-          return 1;
+    let fakeProgress = 0;
+    const progressInterval = setInterval(() => {
+      fakeProgress = Math.min(fakeProgress + 0.05, 0.75);
+      if (isMounted) {
+        setProgress(fakeProgress);
+        if (fakeProgress >= 0.3) setCheckBullets1(true);
+        if (fakeProgress >= 0.6) setCheckBullets2(true);
+      }
+    }, 150);
+
+    // Proses inferensi ONNX
+    async function runInference() {
+      try {
+        if (!imageUri) throw new Error("No image found");
+        
+        const inputTensor = await usePreprocessImage(imageUri);
+        const session = await getInferenceSession();
+        
+        const feeds = { input: inputTensor };
+        const results = await session.run(feeds);
+        const rawOutput = Array.from(results.output.data);
+
+        const probabilities = softmax(rawOutput);
+
+        let maxIndex = 0;
+        for (let i = 1; i < probabilities.length; i++) {
+          if (probabilities[i] > probabilities[maxIndex]) maxIndex = i;
         }
-        return prev + 0.05;
-      });
 
-      // Update checklist
-      if (progress >= 0.3 && !checkBullets1) setCheckBullets1(true);
-      if (progress >= 0.6 && !checkBullets2) setCheckBullets2(true);
-      if (progress >= 0.9 && !checkBullets3) setCheckBullets3(true);
-    }, 300);
+        const predictedLabel = CLASS_LABELS[maxIndex];
+        const predictedConfidence = Math.round(probabilities[maxIndex] * 100);
 
-    return () => clearInterval(interval);
-  }, []);
+        if (!isMounted) return;
+
+        clearInterval(progressInterval);
+        setProgress(1);
+        setCheckBullets3(true);
+        setScanResult({ label: predictedLabel, confidence: predictedConfidence });
+
+        setTimeout(() => {
+          if (!isMounted) return;
+          router.replace({
+            pathname: "/(auth)/scan-result",
+            params: {
+              label: predictedLabel,
+              confidence: predictedConfidence,
+              imageUri: imageUri || null
+            }
+          });
+        }, 1500);
+
+      } catch (error) {
+        console.error("Gagal menjalankan inferensi ONNX:", error);
+        if (!isMounted) return;
+        clearInterval(progressInterval);
+        router.replace({
+          pathname: "/(auth)/scan-result",
+          params: { error: "true", imageUri: imageUri || null },
+        });
+      }
+    }
+
+    runInference();
+
+    return () => {
+      isMounted = false;
+      clearInterval(progressInterval);
+    };
+  }, [imageUri]);
 
   return (
     <View style={scanStyles.container}>
@@ -132,11 +175,11 @@ const ScanAnimateScreen = () => {
       <View style={scanStyles.checklist}>
         <View style={scanStyles.listItemProgress}>
           <Text style={checkBullets1 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
-          <Text style={checkBullets1 ? scanStyles.textOn : scanStyles.textOff}>Memuat gambar</Text>
+          <Text style={checkBullets1 ? scanStyles.textOn : scanStyles.textOff}>Mendeteksi jenis dan area daging</Text>
         </View>
         <View style={scanStyles.listItemProgress}>
           <Text style={checkBullets2 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>
-          <Text style={checkBullets2 ? scanStyles.textOn : scanStyles.textOff}>Menganalisis tekstur dan warna</Text>
+          <Text style={checkBullets2 ? scanStyles.textOn : scanStyles.textOff}>Menganalisa warna dan textur</Text>
         </View>
         <View style={scanStyles.listItemProgress}>
           <Text style={checkBullets3 ? scanStyles.bulletOn : scanStyles.bulletOff}>{"\u2022"}</Text>

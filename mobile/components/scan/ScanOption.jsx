@@ -34,7 +34,10 @@ export default function ScanOption() {
 
       if (!result.canceled) {
         console.log('Image selected:', result.assets[0].uri);
-        router.push("/(auth)/scan-animate");
+        router.push({
+          pathname: "/(auth)/scan-animate",
+          params: { imageUri: result.assets[0].uri }
+        });
         return;
       }
     } catch (Err) {

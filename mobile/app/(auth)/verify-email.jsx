@@ -1,4 +1,4 @@
-import { useSignUp } from "@clerk/clerk-expo";
+
 import { useState } from "react";
 import {
   View,

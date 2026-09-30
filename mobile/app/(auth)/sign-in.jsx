@@ -15,13 +15,13 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
-import { useSignIn } from "@clerk/clerk-expo";
+
 
 const { height } = Dimensions.get("window");
 
 const SignInScreen = () => {
   const router = useRouter();
-  const { signIn, setActive, isLoaded } = useSignIn();
+  // TODO: Add authentication logic later
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

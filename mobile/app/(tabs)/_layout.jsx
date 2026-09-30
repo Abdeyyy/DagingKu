@@ -1,4 +1,4 @@
-// import { useAuth } from "@clerk/clerk-expo";
+
 import { Redirect, Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
@@ -27,7 +27,7 @@ const TabsLayout = () => {
       <Tabs.Screen
         name="scan"
         options={{
-          title: "Scan",
+          title: "Model",
           tabBarIcon: ({ color, size }) => <Ionicons name="scan-outline" size={size} color={color} />,
         }}
       />

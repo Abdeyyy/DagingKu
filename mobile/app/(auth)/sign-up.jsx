@@ -15,7 +15,7 @@ import {
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { COLORS } from "../../constants/colors";
-import { useSignUp } from "@clerk/clerk-expo";
+
 import VerifyEmail from "./verify-email";
 
 const { height } = Dimensions.get("window");
